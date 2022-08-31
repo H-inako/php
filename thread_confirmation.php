@@ -23,7 +23,7 @@ if (!empty($_POST['confirm'])){
 
     $statement->execute();
            unset($_SESSION['thread']); 
-           header('Location: top.php');
+           header('Location: thread.php');
            exit();
 
 }

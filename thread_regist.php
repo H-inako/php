@@ -7,6 +7,7 @@ if(!isset($_SESSION['id'])){
 }
 
 
+
 if(!empty($_POST['check'])){
 
     if($_POST['title']== ''){
@@ -73,6 +74,9 @@ if(!empty($_POST['check'])){
       </div>
       <div>
         <button class="btn top" type="button" onclick="location.href='./top.php'">トップに戻る</button>
+      </div>
+      <div>
+        <button class="btn top" type="button" onclick="location.href='./thread.php'">スレッド一覧</button>
       </div>
     </form>
 </body>
