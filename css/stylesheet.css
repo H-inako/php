@@ -1,0 +1,56 @@
+body{
+    background-color:#deeaf5;
+    text-align: center;
+    width: 500px;
+    margin:0 auto;
+}
+
+.btn{
+    width:170px;
+    padding:3px 7px;
+    border-radius:5px;
+    margin-top: 10px;
+}
+
+.confirm ,.submit{
+    color:white;
+    background-color:#4572c4;
+}
+
+.former,.top{
+    color:#4572c4;
+    background-color:white;
+}
+
+.form_item{
+    padding-top: 12px;
+    padding-bottom: 12px;
+    display: flex;
+}
+
+.form_item_input{
+    margin: 0 0 0 auto;
+}
+
+ul{
+    list-style: none;
+}
+
+li{
+    float: left;
+    margin-left: 20px;
+}
+
+.name{
+    margin-left: 12px;
+}
+
+.error{
+    color:red;
+    font-size: 14px;
+    margin: 0 0 0 auto;
+}
+
+.textarea{
+    width: 200px;
+}
