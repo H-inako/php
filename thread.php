@@ -25,15 +25,12 @@ if (!empty($_POST['search'])){
     
 }
 
-
-
-
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>新規スレッド作成</title>
+    <title>スレッド一覧</title>
     <link rel="stylesheet" href="css/stylesheet2.css">
 </head>
 <body>
@@ -61,7 +58,7 @@ if (!empty($_POST['search'])){
         <?php while($thread = $statement->fetch()): ?>
         <dt>
             ID: <?php echo $thread['id'].'  ';?>
-            <a href="thread.php?id=<?php echo $thread['id'];?>"><?php echo $thread['title'];?></a>
+            <a href="./thread_detail.php?id=<?php echo $thread['id'];?>"><?php echo $thread['title'];?></a>
             <?php echo '  '.$thread['created_at'];?>
         </dt>
         <?php endwhile ?>
@@ -69,11 +66,11 @@ if (!empty($_POST['search'])){
     <?php endif ?>
     <?php if(!empty($_POST['search'])): ?>
     <dl class="thread-box">
-        <?php while($searched = $stmt->fetch()): ?>
+        <?php while($thread = $stmt->fetch()): ?>
         <dt>
-            ID: <?php echo $searched['id'].'  ';?>
-            <a href="thread.php?id=<?php echo $searched['id'];?>"><?php echo $searched['title'];?></a>
-            <?php echo '  '.$searched['created_at'];?>
+            ID: <?php echo $thread['id'].'  ';?>
+            <a href="./thread_detail.php?id=<?php echo $thread['id'];?>"><?php echo $thread['title'];?></a>
+            <?php echo '  '.$thread['created_at'];?>
         </dt>
         <?php endwhile ?>
     </dl>
