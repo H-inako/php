@@ -3,33 +3,44 @@ require("./dbconnect.php");
 session_start();
 
 $id=$_GET['id'];
+//echo $id;
 
 if(empty($id)){
     header('Location: thread.php'); 
     exit();
 }
 
-//スレッドの中身
-$sql="SELECT * FROM threads where id=:id";
-$stmt = $db->prepare($sql);
+//スレッドの中身OK
+$sql1="SELECT * FROM threads where id=:id";
+$stmt = $db->prepare($sql1);
 $stmt->bindValue(':id',$id, PDO::PARAM_STR);
 $stmt->execute();
 $thread_detail=$stmt->fetch();
 
-//スレッド投稿者の名前取得
+//スレッド投稿者の名前取得OK
 $member_id=$thread_detail['member_id'];
 $sql2="SELECT * FROM members where id=:id";
-$statement=$db->prepare($sql2);
-$statement->bindValue(':id',$member_id, PDO::PARAM_INT);
-$statement->execute();
-$thread_author=$statement->fetch();
+$statement2=$db->prepare($sql2);
+$statement2->bindValue(':id',$member_id, PDO::PARAM_INT);
+$statement2->execute();
+$thread_author=$statement2->fetch();
 $name=$thread_author['name_sei'].'  '.$thread_author['name_mei'];
 
+//コメントを取得して表示
+$sql3 = "SELECT * FROM comments WHERE thread_id=:thread_id order by created_at desc";
+$statement3 = $db->prepare($sql3);
+$statement3->bindValue(':thread_id',$id, PDO::PARAM_INT);
+$statement3->execute();
+$thread_comment = $statement3->fetch();
+
+
+
+//var_dump($thread_comment);
 //var_dump($thread_author);
 //var_dump($thread_detail);
 
 
-//コメントのバリデーション
+//コメントのバリデーションOK
 if(!empty($_POST['check'])){
     if($_POST['comment']== ''){
         $error['comment'] ='blank'; 
@@ -40,8 +51,21 @@ if(!empty($_POST['check'])){
     }
 
     if (!isset($error)) {
-        //コメントをDBに登録
-        
+    //コメントをDBに登録OK
+       $comment=$_POST['comment'];
+       $sql="INSERT INTO comments(member_id,thread_id,comment,created_at,updated_at)
+       VALUES(:member_id,:thread_id,:comment,:created_at,:updated_at)";
+       $statement = $db->prepare($sql);
+    
+       $statement->bindParam(':member_id', $member_id,PDO::PARAM_INT);
+       $statement->bindParam(':thread_id', $id,PDO::PARAM_INT);
+       $statement->bindParam(':comment', $comment,PDO::PARAM_STR);
+       $statement->bindParam(':created_at', $created_at,PDO::PARAM_STR);
+       $statement->bindParam(':updated_at', $updated_at,PDO::PARAM_STR);
+       $statement->execute();
+
+       header("Location: thread_detail.php?id=$id");
+       exit();
     }
 }
 
@@ -75,6 +99,20 @@ if(!empty($_POST['check'])){
                         <?php echo nl2br($thread_detail['content']) ?>
                     </dd>
                 </dl>
+                <div class="comment-box">
+                <?php while($thread_comment = $statement3->fetch()): ?>
+                <?php $sql5="SELECT * FROM members where id=:id";
+                    $statement5=$db->prepare($sql5);
+                    $statement5->bindValue(':id',$thread_comment['member_id'], PDO::PARAM_INT);
+                    $statement5->execute();
+                    $comment_author=$statement5->fetch();
+                    $comment_name=$comment_author['name_sei'].'  '.$comment_author['name_mei']; ?>
+                <dt>
+                <?php echo $thread_comment['id'].'  '.$comment_name.'  '.$thread_comment['created_at'];?><br>
+                <?php echo nl2br($thread_comment['comment']) ?>
+                </dt>
+                <?php endwhile ?>
+                </div>
         </div>
         <?php if(isset($_SESSION['id'])):?>
         <form action="" method="post">
