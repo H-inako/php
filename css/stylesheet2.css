@@ -128,8 +128,6 @@ h3{
 }
 
 .index-item{
-    margin-bottom: 30px;
-    border-bottom: 5px solid #ccc;
     padding-bottom: 20px;
 }
 
@@ -192,4 +190,14 @@ h3{
     text-align: left;
     margin-bottom: 20px;
     border-bottom: 1px solid grey;
+  }
+
+  .paging{
+    background-color: #ccc;
+    height: 30px;
+    margin-bottom: 30px;
+  }
+
+  .paging span{
+    color: grey;
   }

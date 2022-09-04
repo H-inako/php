@@ -5,6 +5,7 @@ session_start();
 $id=$_GET['id'];
 //echo $id;
 
+
 if(empty($id)){
     header('Location: thread.php'); 
     exit();
@@ -16,29 +17,58 @@ $stmt = $db->prepare($sql1);
 $stmt->bindValue(':id',$id, PDO::PARAM_STR);
 $stmt->execute();
 $thread_detail=$stmt->fetch();
-
-//スレッド投稿者の名前取得OK
 $member_id=$thread_detail['member_id'];
-$sql2="SELECT * FROM members where id=:id";
-$statement2=$db->prepare($sql2);
-$statement2->bindValue(':id',$member_id, PDO::PARAM_INT);
-$statement2->execute();
-$thread_author=$statement2->fetch();
-$name=$thread_author['name_sei'].'  '.$thread_author['name_mei'];
 
-//コメントを取得して表示
-$sql3 = "SELECT * FROM comments WHERE thread_id=:thread_id order by created_at desc";
-$statement3 = $db->prepare($sql3);
-$statement3->bindValue(':thread_id',$id, PDO::PARAM_INT);
-$statement3->execute();
-$thread_comment = $statement3->fetch();
+//メンバーとコメントテーブルを結合し、該当のスレッドIDを持つレコードを取得
+$sql3 = 
+'SELECT 
+comments.id as id,
+comments.comment as comment,
+comments.created_at as created_at,
+members.name_sei as name_sei,
+members.name_mei as name_mei
+FROM comments INNER JOIN members ON comments.member_id = members.id WHERE comments.thread_id=:thread_id order by comments.created_at desc';
+    $stmt3 = $db->prepare($sql3);
+    $stmt3->bindValue(':thread_id',$id, PDO::PARAM_INT);
+    $stmt3->execute();
 
+$comments=array();
+while($row = $stmt3->fetch(PDO::FETCH_ASSOC)){
+ $comments[]=array(
+ 'comment' =>$row['comment'],
+ 'comment_id' =>$row['id'],
+ 'name_sei'=>$row['name_sei'],
+ 'name_mei'=>$row['name_mei'],
+ 'created_at'=>$row['created_at']
+ );
+}
+//コメントの数を取得OK
+$sql4 = "SELECT COUNT(*) AS cnt FROM comments WHERE thread_id=:thread_id";
+$statement4 = $db->prepare($sql4);
+$statement4->bindValue(':thread_id',$id, PDO::PARAM_INT);
+$statement4->execute();
+$record = $statement4->fetch();
+$comment_count=$record['cnt'];
+
+
+//ページング
+$num=5;//表示するコメント件数
+$totalPages=ceil($comment_count/$num);
+
+//指定件数ごとにコメント配列を分割
+$comments=array_chunk($comments,$num);
+$page=1;
+if(isset($_GET['page']) && is_numeric($_GET['page'])){
+    $page=intval($_GET['page']);
+    if(!isset($comments[$page-1])){
+          $page=1;
+        }
+    }
 
 
 //var_dump($thread_comment);
 //var_dump($thread_author);
 //var_dump($thread_detail);
-
 
 //コメントのバリデーションOK
 if(!empty($_POST['check'])){
@@ -52,14 +82,14 @@ if(!empty($_POST['check'])){
 
     if (!isset($error)) {
     //コメントをDBに登録OK
-       $comment=$_POST['comment'];
+       $comment_content=$_POST['comment'];
        $sql="INSERT INTO comments(member_id,thread_id,comment,created_at,updated_at)
        VALUES(:member_id,:thread_id,:comment,:created_at,:updated_at)";
        $statement = $db->prepare($sql);
     
        $statement->bindParam(':member_id', $member_id,PDO::PARAM_INT);
        $statement->bindParam(':thread_id', $id,PDO::PARAM_INT);
-       $statement->bindParam(':comment', $comment,PDO::PARAM_STR);
+       $statement->bindParam(':comment', $comment_content,PDO::PARAM_STR);
        $statement->bindParam(':created_at', $created_at,PDO::PARAM_STR);
        $statement->bindParam(':updated_at', $updated_at,PDO::PARAM_STR);
        $statement->execute();
@@ -89,6 +119,19 @@ if(!empty($_POST['check'])){
         <div class="index-item">
             <h2><?php echo $thread_detail['title'] ?></h2>
             <h3><?php echo $thread_detail['created_at'] ?></h3>
+            <h3>[<?php echo $comment_count ?>コメント]</h3>
+        </div>
+        <div class="paging">
+                <?php if ($page > 1) : ?>
+	                <a href="./thread_detail.php?id=<?php echo $id;?>&page=<?php echo $page-1; ?>">前へ</a>
+                <?php else: ?>
+                    <span>前へ</span>
+                <?php endif; ?>
+                <?php if ($page < $totalPages) : ?>
+                    <a href="./thread_detail.php?id=<?php echo $id;?>&page=<?php echo $page+1; ?>">次へ</a>
+                <?php else: ?>
+                    <span>次へ</span>
+                <?php endif; ?>
         </div>
         <div class="index-item">
                 <dl class="index-box">
@@ -100,18 +143,28 @@ if(!empty($_POST['check'])){
                     </dd>
                 </dl>
                 <div class="comment-box">
-                <?php while($thread_comment = $statement3->fetch()): ?>
-                <?php $sql5="SELECT * FROM members where id=:id";
-                    $statement5=$db->prepare($sql5);
-                    $statement5->bindValue(':id',$thread_comment['member_id'], PDO::PARAM_INT);
-                    $statement5->execute();
-                    $comment_author=$statement5->fetch();
-                    $comment_name=$comment_author['name_sei'].'  '.$comment_author['name_mei']; ?>
+                <?php if($comment_count>0): ?>
+                <?php foreach($comments[$page-1] as $comment): ?>
                 <dt>
-                <?php echo $thread_comment['id'].'  '.$comment_name.'  '.$thread_comment['created_at'];?><br>
-                <?php echo nl2br($thread_comment['comment']) ?>
+                <?php echo $comment['id'].'  '.$comment['name_sei'].' '.$comment['name_mei'].'  '.$comment['created_at'];?><br>
+                <?php echo nl2br($comment['comment']); ?>
                 </dt>
-                <?php endwhile ?>
+                <?php endforeach; ?>
+                <?php else: ?>
+                    <p>コメントはまだありません</P>
+                <?php endif ?>
+                </div>
+                <div class="paging">
+                <?php if ($page > 1) : ?>
+	                <a href="./thread_detail.php?id=<?php echo $id;?>&page=<?php echo $page-1; ?>">前へ</a>
+                <?php else: ?>
+                    <span>前へ</span>
+                <?php endif; ?>
+                <?php if ($page < $totalPages) : ?>
+                    <a href="./thread_detail.php?id=<?php echo $id;?>&page=<?php echo $page+1; ?>">次へ</a>
+                <?php else: ?>
+                    <span>次へ</span>
+                <?php endif; ?>
                 </div>
         </div>
         <?php if(isset($_SESSION['id'])):?>
