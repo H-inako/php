@@ -192,6 +192,10 @@ h3{
     border-bottom: 1px solid grey;
   }
 
+  .like{
+    text-align: right;
+  }
+
   .paging{
     background-color: #ccc;
     height: 30px;

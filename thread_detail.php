@@ -146,7 +146,7 @@ if(!empty($_POST['check'])){
                 <?php if($comment_count>0): ?>
                 <?php foreach($comments[$page-1] as $comment): ?>
                 <dt>
-                <?php echo $comment['id'].'  '.$comment['name_sei'].' '.$comment['name_mei'].'  '.$comment['created_at'];?><br>
+                <?php echo $comment['comment_id'].'  '.$comment['name_sei'].' '.$comment['name_mei'].'  '.$comment['created_at'];?><br>
                 <?php echo nl2br($comment['comment']); ?>
                 </dt>
                 <?php endforeach; ?>
