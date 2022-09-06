@@ -45,6 +45,14 @@ if(isset($_SESSION['id'])){
         <h1>セルバ掲示板</h1>
     </main>
 </body>
-
+<footer>
+<?php if(isset($_SESSION['id'])):?>
+<div class="hwrapper">
+<ul class=bottun-list>
+    <li class="bottun"><a class="btn" href="./member_withdrawal.php">退会</a></li>
+</ul> 
+</div>
+<?php endif ?>
+</footer>
 
 </html>

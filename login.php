@@ -16,14 +16,13 @@ if(!empty($_POST['check'])){
 
     if ($error['email'] !='blank' && $error['password'] !='blank') {
 
-        //メールアドレスがDBに登録されているか
-        $sql = "SELECT COUNT(*) AS cnt FROM members WHERE email=?";
+        //メールアドレスがDBに登録されているかつ、deleted_atがnull
+        $sql = "SELECT COUNT(*) AS cnt FROM members WHERE email=? and deleted_at is null";
         $statement = $db->prepare($sql);
         $statement->execute(array($_POST['email']));
         $record = $statement->fetch();
        
         if($record['cnt'] > 0){
-
            //されていたら、パスワードが一致するか
            $sql = "SELECT * FROM members WHERE email =:email";
            $statement = $db->prepare($sql);
