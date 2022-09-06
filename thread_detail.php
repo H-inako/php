@@ -2,14 +2,15 @@
 require("./dbconnect.php");
 session_start();
 
+
 $id=$_GET['id'];
 //echo $id;
 
 
-if(empty($id)){
-    header('Location: thread.php'); 
-    exit();
-}
+//if(empty($id)){
+    //header('Location: thread.php'); 
+    //exit();
+//}
 
 //スレッドの中身OK
 $sql1="SELECT * FROM threads where id=:id";
@@ -63,8 +64,42 @@ if(isset($_GET['page']) && is_numeric($_GET['page'])){
     if(!isset($comments[$page-1])){
           $page=1;
         }
-    }
+}
 
+//いいね押されたとき
+if (isset($_REQUEST['like'])) {
+//echo $_REQUEST['like'];
+//echo $_SESSION['id'];
+
+//いいね済みであるか確認
+$pressed = $db->prepare('SELECT COUNT(*) AS cnt FROM likes WHERE comment_id=:comment_id and member_id=:member_id');
+$pressed->bindValue(':comment_id',$_REQUEST['like'], PDO::PARAM_INT);
+$pressed->bindValue(':member_id',$_SESSION['id'], PDO::PARAM_INT);
+$pressed->execute();
+$my_like_cnt = $pressed->fetch();
+//echo $my_like_cnt['cnt'];
+
+//いいねのデータを挿入or削除
+if ($my_like_cnt['cnt'] < 1) {
+    $press = $db->prepare('INSERT INTO likes(member_id,comment_id)VALUES(:member_id,:comment_id)');
+    $press->bindValue(':comment_id',$_REQUEST['like'], PDO::PARAM_INT);
+    $press->bindValue(':member_id',$_SESSION['id'], PDO::PARAM_INT);
+    $press->execute();
+    header("Location: thread_detail.php?id=$id&page=$page");
+    exit();
+  } else {
+    $cancel = $db->prepare('DELETE FROM likes WHERE comment_id=:comment_id AND member_id=:member_id');
+    $cancel->bindValue(':comment_id',$_REQUEST['like'], PDO::PARAM_INT);
+    $cancel->bindValue(':member_id',$_SESSION['id'], PDO::PARAM_INT);
+    $cancel->execute();
+    header("Location: thread_detail.php?id=$id&page=$page");
+    exit();
+}
+}
+
+
+
+//var_dump($my_likes);
 
 //var_dump($thread_comment);
 //var_dump($thread_author);
@@ -106,6 +141,7 @@ if(!empty($_POST['check'])){
     <meta charset="utf-8">
     <title>スレッド詳細</title>
     <link rel="stylesheet" href="css/stylesheet2.css">
+    <script src="https://kit.fontawesome.com/88a524cdd2.js" crossorigin="anonymous"></script>
 </head>
 <body>
     <header>
@@ -148,6 +184,33 @@ if(!empty($_POST['check'])){
                 <dt>
                 <?php echo $comment['comment_id'].'  '.$comment['name_sei'].' '.$comment['name_mei'].'  '.$comment['created_at'];?><br>
                 <?php echo nl2br($comment['comment']); ?>
+                <?php 
+                $like_count= $db->prepare('SELECT COUNT(*) AS cnt FROM likes WHERE comment_id=:comment_id') ;
+                $like_count->bindValue(':comment_id',$comment['comment_id'], PDO::PARAM_STR);
+                $like_count->execute();
+                $like_counts=$like_count->fetch();
+                ?>
+                <div class="like">
+                <?php 
+                    $likes = $db->prepare('SELECT COUNT(*) as cnt FROM likes WHERE member_id=:member_id and comment_id=:comment_id');
+                    $likes->bindValue(':member_id',$_SESSION['id'], PDO::PARAM_INT);
+                    $likes->bindValue(':comment_id',$comment['comment_id'], PDO::PARAM_INT);
+                    $likes->execute();
+                    $my_like_count=$likes->fetch();
+                ?>
+                    <form>
+            <?php if(isset($_SESSION['id'])):?>
+                <?php if ($my_like_count['cnt'] < 1) : ?>
+                    <a class="heart" href="thread_detail.php?id=<?php echo $id;?>&page=<?php echo $page; ?>&like=<?php echo $comment['comment_id']; ?>"><span class="fa-regular fa-heart"></a>
+                <?php else : ?>
+                    <a class="heart red" href="thread_detail.php?id=<?php echo $id;?>&page=<?php echo $page; ?>&like=<?php echo $comment['comment_id']; ?>"><span class="fa-solid fa-heart"></a>
+                <?php endif; ?>
+            <?php else: ?>
+                <a class="heart" href="member_regist.php"><span class="fa-regular fa-heart"></a>
+            <?php endif; ?>
+                <span><?php echo $like_counts['cnt']; ?></span>
+                    </form>
+                </div>
                 </dt>
                 <?php endforeach; ?>
                 <?php else: ?>
@@ -168,7 +231,7 @@ if(!empty($_POST['check'])){
                 </div>
         </div>
         <?php if(isset($_SESSION['id'])):?>
-        <form action="" method="post">
+        <form action="" method="post" class="comment_form">
         <input type="hidden" name="check" value="checked">
             <textarea class="comment" name="comment"><?php if( !empty($_POST['comment']) ){ echo $_POST['comment']; } ?></textarea>
         <div>

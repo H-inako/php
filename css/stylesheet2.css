@@ -46,7 +46,7 @@ main{
     margin:0 auto;
 }
 
-form{
+.comment_form{
     max-width: 1000px;
     text-align: center;
     margin: 0 auto;
@@ -204,4 +204,18 @@ h3{
 
   .paging span{
     color: grey;
+  }
+
+  .like_bottun{
+    border: none;
+    outline: none;
+    background: transparent;
+  }
+
+  .heart{
+    color: #000;
+  }
+
+  .fa-solid{
+    color: #ED1A3D;
   }
