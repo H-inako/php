@@ -30,6 +30,7 @@ if(isset($_SESSION['id'])){
         </div>
     </header>
     <main>
+    <button class="top" type="button" onclick="location.href='./member.php'">会員一覧</button>
     </main>
 </body>
 <footer>
