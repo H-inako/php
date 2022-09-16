@@ -82,11 +82,11 @@ if (isset($_GET['pref_name']) && $_GET['pref_name'] != ""){
 
 if (isset($_GET['search']) && $_GET['search'] != ""){
     $searchword=$_GET['search'];
-    $sql.=" AND name_sei like ?";
+    $sql.=" AND ( name_sei like ?";
     $bindParam_args[]="%$searchword%";
     $sql.=" OR name_mei like ?";
     $bindParam_args[]="%$searchword%";
-    $sql.=" OR email like ?";
+    $sql.=" OR email like ? )";
     $bindParam_args[]="%$searchword%";
 }
 
@@ -209,6 +209,9 @@ if($page == 1 || $page == $totalPages) {
     <input type="hidden" name="check" value="checked">
     
     <div class="search-form">
+    <div>
+      <button class="member-btn" type="button" onclick="location.href='./member_regist.php'">会員登録</button>
+    </div>
         <table class="search-box">
             <tr>
                 <td class="form-label">ID</td><td><input class="search-box" type="text" name="id" value="<?php if (!empty($_GET['id'])) { echo $_GET['id'];} ?>"></td>
@@ -263,6 +266,7 @@ if($page == 1 || $page == $totalPages) {
                     <?php elseif($_GET['sort']=='ASC'): ?>
                     <a href="./member.php?<?php echo $query_string; ?>&page=<?php echo $page; ?>&sort=DESC"><span class="fa-solid fa-caret-down"></span></a>
                     <?php endif; ?>
+                <th class="form-label">編集</th>
             </tr>
   
         <?php foreach($members[$page-1] as $member): ?>
@@ -279,6 +283,7 @@ if($page == 1 || $page == $totalPages) {
                 <td><?php echo $gender; ?></td>
                 <td><?php echo $member['pref_name'].$member['address']; ?></td>
                 <td><?php echo $member['created_at']; ?></td>
+                <td><a href="./member_edit.php?id=<?php echo $member['id']; ?>">編集</a></td>
             </tr>
         <?php endforeach; ?>
         <?php //echo $query_string; ?>

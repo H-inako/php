@@ -13,7 +13,7 @@ header,footer{
 .hwrapper{
     max-width: 1000px;
     margin: 0 auto;
-}    
+} 
 
 .bottun-list{
     list-style: none;
@@ -49,7 +49,7 @@ main{
     text-align: center;
     width: 100%;
     margin:0 auto;
-    height: 800px;
+    height: 1000px;
 }
 
 .comment_form{
@@ -114,6 +114,15 @@ table {
     margin-top: 30px;
     color:white;
     background-color:#4572c4;
+    width:170px;
+    padding:3px 7px;
+    border-radius:5px;
+}
+
+.member-btn{
+    margin-bottom: 30px;
+    color:#4572c4;
+    background-color:white;
     width:170px;
     padding:3px 7px;
     border-radius:5px;
