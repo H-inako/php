@@ -66,9 +66,6 @@ if (!empty($_POST['confirm'])){
 </div>
 <div class="form_item">
     <p class="form_item_label">メールアドレス</p><p class="form_item_input"><?php echo $_SESSION['join']['email'] ?></p>
-</div>
-    <input type="hidden" name="ticket" value="<?php echo $token;?>" >
-<div>
     <input class="btn submit" type="submit" value="登録完了">
 </div>
 <div>

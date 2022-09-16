@@ -2,7 +2,7 @@
 require_once("../list.php");
 require("../dbconnect.php");
 session_start();
-ini_set('display_errors', 1);
+//ini_set('display_errors', 1);
 
 //検索窓に何もない場合、全ての会員を表示
 if(empty($_GET['check'])||$_GET['id']==''&&$_GET['gender']==''&&$_GET['pref_name']==''&&$_GET['search']==''){
@@ -58,12 +58,10 @@ if(count($_GET)>0){
     $sql = "SELECT * FROM members where 1 ";
     $bindParam_args = [];
 
-
 if (isset($_GET['id']) && $_GET['id'] != ""){
     $sql.=" AND id=?";
     $bindParam_args[]=$_GET['id'];
 }
-
 if (isset($_GET['gender']) && is_array($_GET['gender'])){
     //var_dump($_POST['gender']);
     $arr1 = array();
@@ -72,13 +70,13 @@ if (isset($_GET['gender']) && is_array($_GET['gender'])){
     $bindParam_args[]=$gender;
     }
     $where =implode(" OR ",$arr1);
-    $sql.=" AND $where";
+    $sql.=" AND ($where)";
 }
 
 if (isset($_GET['pref_name']) && $_GET['pref_name'] != ""){
     $pref_num = $_GET['pref_name'];
     $pref_name = $prefNameList["$pref_num"];
-    $sql.=" AND pref_name=?";
+    $sql.=" AND pref_name = ?";
     $bindParam_args[]=$pref_name;
 }
 
@@ -108,22 +106,23 @@ if(empty($_GET['sort'])){
             break;
     }
 }
+//var_dump($bindParam_args);
 
-print $sql;
-//var_dump($data);
+//print $sql;
 $stmt3=$db->prepare($sql);
 //bind配列
 $index=1;
 //foreach ($bindParam_args as $params){
     foreach ($bindParam_args as $param_id => $value) {
-            $bindParam_args[$index] = $value; // 疑問符パラメータ
+        $bindParam_args[$index] = $value; 
         $index++;
     }
 //}
-
-var_dump($bindParam_args);
+unset($bindParam_args[0]);
+//var_dump($bindParam_args);
 
 foreach ($bindParam_args as $param_id => $value) {
+
     switch (gettype($value)) {
         case 'integer':
             $param_type = PDO::PARAM_INT;
