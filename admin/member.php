@@ -2,10 +2,33 @@
 require_once("../list.php");
 require("../dbconnect.php");
 session_start();
+ini_set('display_errors', 1);
 
 //検索窓に何もない場合、全ての会員を表示
-if(empty($_POST['check'])||$_POST['id']==''&&$_POST['gender']==''&&$_POST['pref_name']==''&&$_POST['search']==''){
-$stmt=$db->prepare("SELECT * FROM members ORDER BY id desc");
+if(empty($_GET['check'])||$_GET['id']==''&&$_GET['gender']==''&&$_GET['pref_name']==''&&$_GET['search']==''){
+
+$sql="SELECT * FROM members";
+
+if(empty($_GET['sort'])){
+    $sql.=' ORDER BY id DESC';
+}else{
+
+    switch($_GET['sort']){
+        case "ASC":
+            $sql.=' ORDER BY id ASC';
+            break;
+        case "DESC":
+            $sql.=' ORDER BY id DESC';
+            break;
+        default:
+            $sql.=' ORDER BY id DESC';
+            break;
+    }
+}
+
+//print $sql;
+
+$stmt=$db->prepare($sql);
 $stmt->execute();
 
 $members=array();
@@ -25,75 +48,116 @@ $stmt2=$db->prepare("SELECT COUNT(*) as cnt FROM members");
 $stmt2->execute();
 $record=$stmt2->fetch();
 $member_count=$record['cnt'];
+
+$query_string = http_build_query($_GET);
 }
 //echo $member_count;
 
 //検索窓ごとにwhere句を作る
-if(!empty($_POST['id'])||!empty($_POST['gender'])||!empty($_POST['pref_name'])||!empty($_POST['search'])){
-$where=array();
-if (isset($_POST['id']) && $_POST['id'] != ""){
-    $where[] = 'id = :id';
+if(count($_GET)>0){
+    $sql = "SELECT * FROM members where 1 ";
+    $bindParam_args = [];
+
+
+if (isset($_GET['id']) && $_GET['id'] != ""){
+    $sql.=" AND id=?";
+    $bindParam_args[]=$_GET['id'];
 }
 
-if (isset($_POST['gender']) && is_array($_POST['gender'])){
+if (isset($_GET['gender']) && is_array($_GET['gender'])){
+    //var_dump($_POST['gender']);
     $arr1 = array();
-    foreach($_POST['gender'] as $gender){
-    $arr1[] = " gender = ':gender' ";
+    foreach($_GET['gender'] as $gender){
+    $arr1[] = " gender = ? ";
+    $bindParam_args[]=$gender;
+    }
+    $where =implode(" OR ",$arr1);
+    $sql.=" AND $where";
+}
+
+if (isset($_GET['pref_name']) && $_GET['pref_name'] != ""){
+    $pref_num = $_GET['pref_name'];
+    $pref_name = $prefNameList["$pref_num"];
+    $sql.=" AND pref_name=?";
+    $bindParam_args[]=$pref_name;
+}
+
+if (isset($_GET['search']) && $_GET['search'] != ""){
+    $searchword=$_GET['search'];
+    $sql.=" AND name_sei like ?";
+    $bindParam_args[]="%$searchword%";
+    $sql.=" OR name_mei like ?";
+    $bindParam_args[]="%$searchword%";
+    $sql.=" OR email like ?";
+    $bindParam_args[]="%$searchword%";
+}
+
+if(empty($_GET['sort'])){
+    $sql.=' ORDER BY id DESC';
+}else{
+
+    switch($_GET['sort']){
+        case "ASC":
+            $sql.=' ORDER BY id ASC';
+            break;
+        case "DESC":
+            $sql.=' ORDER BY id DESC';
+            break;
+        default:
+            $sql.=' ORDER BY id DESC';
+            break;
+    }
+}
+
+print $sql;
+//var_dump($data);
+$stmt3=$db->prepare($sql);
+//bind配列
+$index=1;
+//foreach ($bindParam_args as $params){
+    foreach ($bindParam_args as $param_id => $value) {
+            $bindParam_args[$index] = $value; // 疑問符パラメータ
+        $index++;
+    }
+//}
+
+var_dump($bindParam_args);
+
+foreach ($bindParam_args as $param_id => $value) {
+    switch (gettype($value)) {
+        case 'integer':
+            $param_type = PDO::PARAM_INT;
+            break;
+
+        case 'string':
+            $param_type = PDO::PARAM_STR;
+            break;
+
+        default:
+            $param_type = PDO::PARAM_STR;
     }
 
-    $where[]=implode(" OR ",$arr1);
+    $stmt3->bindValue($param_id, $value, $param_type);
 }
 
-if (isset($_POST['pref_name']) && $_POST['prefname'] != ""){
-    $pref_num = $_POST['pref_name'];
-    $pref_name = $prefNameList["$pref_num"];
-    $where[] = "pref_name = :pref_name";
-}
-
-if (isset($_POST['search']) && $_POST['search'] != ""){
-    $where[] = "name_sei like :name_sei or name_mei like :name_mei or email like :email";
-}
-
-if(count($where) > 0){
-  $wheresql=implode("AND",$where);
-  $sql = 'SELECT * FROM members WHERE'.$wheresql.'ORDER BY id DESC';
-}
-
-if(count($where) > 0){
-    $sql4 = 'SELECT * FROM members WHERE '.$wheresql;
-  }
- $searchword=$_POST['search'];
-$stmt3->$db->prepare($sql);
-$stmt3->bindParam(':id',$_POST['id'], PDO::PARAM_INT);
-$stmt3->bindParam(':gender',$_POST['gender'], PDO::PARAM_INT);
-$stmt3->bindParam(':pref_name',$pref_name, PDO::PARAM_STR);
-$stmt3->bindParam(':name_sei',"%{$searchword}%", PDO::PARAM_STR);
-$stmt3->bindParam(':name_mei',"%{$searchword}%", PDO::PARAM_STR);
-$stmt3->bindParam(':email',"%{$searchword}%", PDO::PARAM_STR);
 $stmt3->execute();
-$members=array();
 
-$stmt4=$db->prepare($sql4);
-$stmt4->bindParam(':id',$_POST['id'], PDO::PARAM_INT);
-$stmt4->bindParam(':gender',$_POST['gender'], PDO::PARAM_INT);
-$stmt4->bindParam(':pref_name',$pref_name, PDO::PARAM_STR);
-$stmt4->bindParam(':search_word',"%{$searchword}%", PDO::PARAM_STR);
-$stmt4->bindParam(':name_mei',"%{$searchword}%", PDO::PARAM_STR);
-$stmt4->bindParam(':email',"%{$searchword}%", PDO::PARAM_STR);
-$stmt4->execute();
-$record=$stmt4->fetch();
-$member_count=$record['cnt'];
+$members=array();
 while($row = $stmt3->fetch(PDO::FETCH_ASSOC)){
-    $members[]=array(
-    'id' =>$row['id'],
-    'name_sei'=>$row['name_sei'],
-    'name_mei'=>$row['name_mei'],
-    'gender'=>$row['gender'],
-    'pref_name'=>$row['pref_name'],
-    'address'=>$row['address'],
-    'created_at'=>$row['created_at']
-    );
-   }
+  $members[]=array(
+  'id' =>$row['id'],
+  'name_sei'=>$row['name_sei'],
+  'name_mei'=>$row['name_mei'],
+  'gender'=>$row['gender'],
+  'pref_name'=>$row['pref_name'],
+  'address'=>$row['address'],
+  'created_at'=>$row['created_at']
+  );
+ }
+
+$member_count=$stmt3->rowCount();
+$query_string = http_build_query($_GET);
+
 }
 
 //ページング
@@ -120,6 +184,9 @@ if($page == 1 || $page == $totalPages) {
 }
 
 
+
+
+
 ?>
 
 <!DOCTYPE html>
@@ -128,6 +195,7 @@ if($page == 1 || $page == $totalPages) {
     <meta charset="utf-8">
     <title>会員一覧</title>
     <link rel="stylesheet" href="../css/stylesheet3.css">
+    <script src="https://kit.fontawesome.com/88a524cdd2.js" crossorigin="anonymous"></script>
 </head>
 <body>
     <header>
@@ -138,16 +206,19 @@ if($page == 1 || $page == $totalPages) {
         </div>
     </header>
 <main>
-    <form action="" method="post">
+    <form action="" method="get">
     <input type="hidden" name="check" value="checked">
     
     <div class="search-form">
         <table class="search-box">
             <tr>
-                <td class="form-label">ID</td><td><input class="search-box" type="text" name="id"></td>
+                <td class="form-label">ID</td><td><input class="search-box" type="text" name="id" value="<?php if (!empty($_GET['id'])) { echo $_GET['id'];} ?>"></td>
             </tr>
             <tr>
-                <td class="form-label">性別</td><td><div class="form_item_input"><input type="checkbox" name="gender[]" value="0"> 男性<input type="checkbox" name="gender[]" value="1"> 女性</div></td>
+                <td class="form-label">性別</td><td><div class="form_item_input">
+                    <input type="checkbox" name="gender[]" value="0" <?php if (!empty($_GET['gender'])&& in_array("0", $_GET['gender'])){echo "checked";}?>> 男性
+                    <input type="checkbox" name="gender[]" value="1" <?php if (!empty($_GET['gender'])&& in_array("1", $_GET['gender'])){echo "checked";}?>> 女性
+                </td>
             </tr>
             <tr>
                 <td class="form-label">都道府県</td>
@@ -155,7 +226,7 @@ if($page == 1 || $page == $totalPages) {
             <select name="pref_name" >
             <?php
             foreach($prefNameList as $key => $value){
-            if($key == $_POST['pref_name']){
+            if($key == $_GET['pref_name']){
             echo "<option value='$key' selected>".$value."</option>";
             }else{
             echo "<option value='$key'>".$value."</option>";
@@ -166,7 +237,7 @@ if($page == 1 || $page == $totalPages) {
             </td>
             </tr>
             <tr>
-                <td class="form-label">フリーワード</td><td><input class="search-box" type="text" name="search"></td>
+                <td class="form-label">フリーワード</td><td><input class="search-box" type="text" name="search" value="<?php if (!empty($_GET['search'])) { echo $_GET['search'];} ?>"></td>
             </tr>
         </table>
             <input class="search-bottun" type="submit" name="" value="検索する">
@@ -174,13 +245,25 @@ if($page == 1 || $page == $totalPages) {
     </form>
 
     <div class="member">
+        <?php if($member_count>0): ?>
         <table class="member-box">
             <tr>
-                <th class="form-label id">ID</th>
+                <th class="form-label id">ID 
+                    <?php if(empty($_GET['sort']) || $_GET['sort']=='DESC'): ?>
+                    <a href="./member.php?<?php echo $query_string; ?>&page=<?php echo $page; ?>&sort=ASC"><span class="fa-solid fa-caret-up"></span></a>
+                    <?php elseif($_GET['sort']=='ASC'): ?>
+                    <a href="./member.php?<?php echo $query_string; ?>&page=<?php echo $page; ?>&sort=DESC"><span class="fa-solid fa-caret-down"></span></a>
+                    <?php endif; ?>
+                </th>
                 <th class="form-label name">氏名</th>
                 <th class="form-label gender">性別</th>
                 <th class="form-label address">住所</th>
-                <th class="form-label datetime">登録日時</th>
+                <th class="form-label datetime">登録日時 
+                    <?php if(empty($_GET['sort']) || $_GET['sort']=='DESC'): ?>
+                    <a href="./member.php?<?php echo $query_string; ?>&page=<?php echo $page; ?>&sort=ASC"><span class="fa-solid fa-caret-up"></span></a>
+                    <?php elseif($_GET['sort']=='ASC'): ?>
+                    <a href="./member.php?<?php echo $query_string; ?>&page=<?php echo $page; ?>&sort=DESC"><span class="fa-solid fa-caret-down"></span></a>
+                    <?php endif; ?>
             </tr>
   
         <?php foreach($members[$page-1] as $member): ?>
@@ -199,11 +282,16 @@ if($page == 1 || $page == $totalPages) {
                 <td><?php echo $member['created_at']; ?></td>
             </tr>
         <?php endforeach; ?>
+        <?php //echo $query_string; ?>
         </table>
+        <?php endif; ?>
+        <?php if(count($_GET)>0 && $member_count<1):?>
+            <span>検索結果：０件</span>
+        <?php endif; ?>
     </div>
     <div class="paging">
     <?php if ($page > 1) : ?>
-      <a href="./member_test.php?page=<?php echo $page-1; ?>">前へ</a>
+      <a href="./member.php?<?php echo $query_string; ?>&page=<?php echo $page-1; ?>">前へ</a>
     <?php else: ?>
       <span></span>
     <?php endif; ?>
@@ -213,13 +301,13 @@ if($page == 1 || $page == $totalPages) {
        <?php if($i == $page) : ?>
            <span class="now_page_number"><?php echo $i; ?></span>
        <?php else: ?>
-           <a href="?page=<?php echo $i; ?>" class="page_number"><?php echo $i; ?></a>
+           <a href="?<?php echo $query_string; ?>&page=<?php echo $i; ?>" class="page_number"><?php echo $i; ?></a>
        <?php endif; ?>
     <?php endif; ?>
     <?php endfor; ?>
 
     <?php if ($page < $totalPages) : ?>
-      <a href="./member_test.php?page=<?php echo $page+1; ?>">次へ</a>
+      <a href="./member.php?<?php echo $query_string; ?>&page=<?php echo $page+1; ?>">次へ</a>
     <?php else: ?>
       <span></span>
     <?php endif; ?>
