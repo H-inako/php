@@ -4,6 +4,12 @@ require("../dbconnect.php");
 session_start();
 //ini_set('display_errors', 1);
 
+if( !empty($_SESSION['page']) && $_SESSION['page'] === true ) {
+
+    // セッションの削除
+    unset($_SESSION['page']);
+}
+
 //検索窓に何もない場合、全ての会員を表示
 if(empty($_GET['check'])||$_GET['id']==''&&$_GET['gender']==''&&$_GET['pref_name']==''&&$_GET['search']==''){
 
