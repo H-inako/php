@@ -152,8 +152,8 @@ if(!empty($_POST['check'])){
     <div class="gender form_item">
         <p class="form_item_label">性別</p>
         <div class="form_item_input">   
-            <input type="radio" name="gender" value="0" <?php if( !empty($_POST['gender']) && $_POST['gender'] === "0" ){ echo 'checked'; }elseif($member['gender']=="0"){ echo 'checked';} ?>> 男性
-            <input type="radio" name="gender" value="1" <?php if( !empty($_POST['gender']) && $_POST['gender'] === "1" ){ echo 'checked'; }elseif($member['gender']=="1"){ echo 'checked';} ?>> 女性
+            <input type="radio" name="gender" value="0" <?php if( !empty($_POST['gender']) && $_POST['gender'] == "0" ){ echo 'checked'; }elseif($member['gender']=="0"){ echo 'checked';} ?>> 男性
+            <input type="radio" name="gender" value="1" <?php if( !empty($_POST['gender']) && $_POST['gender'] == "1" ){ echo 'checked'; }elseif($member['gender']=="1"){ echo 'checked';} ?>> 女性
         </div>
     </div>
         <?php if(!empty($error["gender"]) && $error['gender'] == 'blank'): ?>

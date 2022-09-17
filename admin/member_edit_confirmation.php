@@ -94,7 +94,11 @@ if (!empty($_POST['confirm'])){
     <p class="form_item_label">住所</p><p class="form_item_input"><?php echo $pref_name.$_SESSION['join']['address']  ?></p>
 </div>
 <div class="form_item">
+<?php if($password==''): ?>
+    <p class="form_item_label">パスワード</p><p class="form_item_input"></p>
+<?php else: ?>
     <p class="form_item_label">パスワード</p><p class="form_item_input">セキュリティのため非表示</p>
+<?php endif; ?>
 </div>
 <div class="form_item">
     <p class="form_item_label">メールアドレス</p><p class="form_item_input"><?php echo $_SESSION['join']['email'] ?></p>

@@ -13,7 +13,7 @@ if( !empty($_SESSION['page']) && $_SESSION['page'] === true ) {
 //検索窓に何もない場合、全ての会員を表示
 if(empty($_GET['check'])||$_GET['id']==''&&$_GET['gender']==''&&$_GET['pref_name']==''&&$_GET['search']==''){
 
-$sql="SELECT * FROM members";
+$sql="SELECT * FROM members WHERE deleted_at IS NULL";
 
 if(empty($_GET['sort'])){
     $sql.=' ORDER BY id DESC';
@@ -61,7 +61,7 @@ $query_string = http_build_query($_GET);
 
 //検索窓ごとにwhere句を作る
 if(count($_GET)>0){
-    $sql = "SELECT * FROM members where 1 ";
+    $sql = "SELECT * FROM members WHERE deleted_at IS NULL" ;
     $bindParam_args = [];
 
 if (isset($_GET['id']) && $_GET['id'] != ""){
@@ -273,6 +273,7 @@ if($page == 1 || $page == $totalPages) {
                     <a href="./member.php?<?php echo $query_string; ?>&page=<?php echo $page; ?>&sort=DESC"><span class="fa-solid fa-caret-down"></span></a>
                     <?php endif; ?>
                 <th class="form-label">編集</th>
+                <th class="form-label">詳細</th>
             </tr>
   
         <?php foreach($members[$page-1] as $member): ?>
@@ -285,11 +286,12 @@ if($page == 1 || $page == $totalPages) {
          ?>
             <tr>
                 <td><?php echo $member['id']; ?></td>
-                <td><?php echo $member['name_sei'].' '.$member['name_mei']; ?></td>
+                <td><a href="./member_detail.php?id=<?php echo $member['id']; ?>"><?php echo $member['name_sei'].' '.$member['name_mei']; ?></a></td>
                 <td><?php echo $gender; ?></td>
                 <td><?php echo $member['pref_name'].$member['address']; ?></td>
                 <td><?php echo $member['created_at']; ?></td>
                 <td><a href="./member_edit.php?id=<?php echo $member['id']; ?>">編集</a></td>
+                <td><a href="./member_detail.php?id=<?php echo $member['id']; ?>">詳細</a></td>
             </tr>
         <?php endforeach; ?>
         <?php //echo $query_string; ?>
